@@ -4,5 +4,8 @@ This repository provides the code & walks through how to use spatially-encourage
 
 If you would like to reference this software, please cite:
 
-And, for the algorithm:
+
+
+And, for the paper defining the algorithm:
+
 Wolf, Levi John. *(In Review)* "Spatially-Encouraged Spectral Clustering." Geographical Analysis. 
