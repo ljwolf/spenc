@@ -15,4 +15,4 @@ Wolf, Levi John. 2018. “Ljwolf/spenc: GISRUK”. Zenodo. doi:10.5281/zenodo.12
 
 And, for the paper defining the algorithm:
 
-Wolf, Levi John. *(In Review)* "Spatially-Encouraged Spectral Clustering." Geographical Analysis. 
+Wolf, Levi John. *(In Review)* "Spatially-Encouraged Spectral Clustering." *International Journal of Geographic Information Science*. 
