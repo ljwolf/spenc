@@ -10,8 +10,12 @@ from sklearn.cluster.spectral import discretize as _discretize
 import numpy as np
 from .scores import boundary_fraction
 from scipy.sparse import csgraph as cg, linalg as la
+from warnings import warn as Warn
 
 class SPENC(clust.SpectralClustering):
+    def __init__(self, *args, assign_labels='discretize', **kwargs):
+        self.assign_labels = 'discretize'
+        clust.SpectralClustering.__init__(self, *args, **kwargs)
 
     def fit(self, X, W=None, y=None, shift_invert=True, breakme=False, check_W=True):
         """Creates an affinity matrix for X using the selected affinity,
@@ -52,11 +56,11 @@ class SPENC(clust.SpectralClustering):
                 self.affinity_matrix_ = W.multiply(self.attribute_affinity_)
         else:
             self.affinity_matrix_ = W
-        if breakme:
+        if breakme: ##sklearn/issues/8129
             self.affinity_ = self.affinity
             self.affinity = 'precomputed'
             super().fit(self.affinity_matrix_, y=y)
-        
+
             self.affinity = self.affinity_
             del self.affinity_
             return self
@@ -67,11 +71,12 @@ class SPENC(clust.SpectralClustering):
 
         random_state = check_random_state(self.random_state)
         v0 = random_state.uniform(-1,1,laplacian.shape[0])
-        
+
         if not shift_invert:
             ev, spectrum = la.eigsh(laplacian, which='LA', k=self.n_clusters, v0=v0)
         else:
             ev, spectrum = la.eigsh(laplacian, which='LM', sigma=1, k=self.n_clusters, v0=v0)
+
         embedding = spectrum.T[self.n_clusters::-1] #sklearn/issues/8129
         embedding = embedding / orig_d
         embedding = _deterministic_vector_sign_flip(embedding)
@@ -81,7 +86,6 @@ class SPENC(clust.SpectralClustering):
         else:
             self.labels_ = _discretize(embedding.T, random_state=random_state)
         return self
-
 
     def score(self, X, W, labels=None, delta=.5, 
               attribute_score=skm.calinski_harabaz_score,
@@ -124,3 +128,100 @@ class SPENC(clust.SpectralClustering):
         attribute_score = attribute_score(X,labels, **attribute_kw)
         spatial_score = spatial_score(W,labels, X=X,**spatial_kw)
         return delta * attribute_score + (1 - delta)*spatial_score
+
+    def _sample_gen(self, W, n_samples=1, 
+                            affinity='rbf',
+                            distribution=None, **fit_kw):
+        """
+        NOTE: this is the lazy generator version of sample
+        Compute random clusters using random eigenvector decomposition.
+        This uses random weights in spectral decomposition to generate approximately-evenly populated
+        random subgraphs from W.
+
+        Arguments
+        ---------
+        W                : np.ndarray or scipy.sparse matrix
+                           matrix encoding the spatial relationships between observations in the frame.
+                           Must be strictly binary & connected to result in connected graphs correct behavior.
+                           Mathematical properties of randomregions are undefined if not.
+        n_samples        : int
+                           integer describing how many samples to construct
+        n_clusters       : int
+                           integer describing how many clusters to draw each sample
+        size             : tuple of ints
+                           tuple overriding (n_samples, n_clusters), if passed.
+        affinity         : string or callable
+                           passed down to the underlying SPENC class when spectral spatial clusters are found.
+        distribution     : callable
+                           function when called with no arguments that draws the random weights used to
+                           generate the random regions. Must align with W. 
+        spenc_parameters : keyword arguments
+                           extra arguments passed down to the SPENC class for further customization.
+        """
+        if distribution is None:
+            distribution = lambda : np.random.normal(0,1,size=(W.shape[0], 1))
+        else:
+            assert callable(distribution), 'distribution is not callable!'
+        for _ in range(n_samples):
+            randomweights = distribution()
+            fitted = self.fit(randomweights, W, **fit_kw)
+            yield fitted.labels_
+
+    def sample(self, W, n_samples=1, 
+               distribution=None, **fit_kw):
+      """
+      Compute random clusters using random eigenvector decomposition.
+      This uses random weights in spectral decomposition to generate approximately-evenly populated
+      random subgraphs from W.
+
+      Arguments
+      ---------
+      W                : np.ndarray or scipy.sparse matrix
+                         matrix encoding the spatial relationships between observations in the frame.
+                         Must be strictly binary & connected to result in connected graphs correct behavior.
+                         Mathematical properties of randomregions are undefined if not.
+      n_samples        : int
+                         integer describing how many samples to construct
+      distribution     : callable
+                         extra arguments passed down to the SPENC class for further customization.
+      """
+      return np.vstack([labels for labels in 
+                        self._sample_gen(W, n_samples=n_samples,
+                                         distribution=distribution, **fit_kw)])
+
+class AgglomerativeClustering(clust.AgglomerativeClustering):
+
+    def _sample_gen(self, n_samples=25, distribution=None):
+        """
+        sample random clusters with agglomerative clustering using random weights.
+        """
+        if distribution is None:
+            distribution = lambda : np.random.normal(0,1,size=(self.connectivity.shape[0],1))
+        else:
+            assert callable(distribution), 'distribution is not callable!'
+        for _ in range(n_samples):
+            randomweights = distribution()
+            fitted = self.fit(randomweights)
+            yield fitted.labels_
+
+    def sample(self, n_samples=1, 
+               distribution=None):
+      """
+      Compute random clusters using randomly-weighted agglomerative clustering. 
+      This uses random weights in agglomerative clustering decomposition to generate
+      random subgraphs from W.
+
+      Arguments
+      ---------
+      W                : np.ndarray or scipy.sparse matrix
+                         matrix encoding the spatial relationships between observations in the frame.
+                         Must be strictly binary & connected to result in connected graphs correct behavior.
+                         Mathematical properties of randomregions are undefined if not.
+      n_samples        : int
+                         integer describing how many samples to construct
+      distribution     : callable
+                         extra arguments passed down to the SPENC class for further customization.
+      """
+      return np.vstack([labels for labels in 
+                        self._sample_gen(n_samples=n_samples,
+                                         distribution=distribution)])
