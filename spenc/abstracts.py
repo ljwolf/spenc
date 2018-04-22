@@ -8,6 +8,7 @@ from sklearn.utils.extmath import _deterministic_vector_sign_flip
 from sklearn.utils import check_random_state
 from sklearn.cluster.spectral import discretize as _discretize
 from sklearn.preprocessing import LabelEncoder
+from sklearn.base import clone
 import numpy as np
 from .scores import boundary_fraction
 import scipy.sparse as spar
@@ -378,19 +379,20 @@ class SPENC(clust.SpectralClustering):
         cuts = []
         accepted_cuts = []
         while discovered < threshold:
-            current_affinity = self.affinity_matrix_[this_cut,:][:,this_cut]
-            embedding = self._embed(current_affinity, shift_invert = shift_invert)
-            second_eigenvector = embedding[1]
-            new_cut, score_of_cut = self._make_hierarchical_cut(second_eigenvector, 
-                                                                current_affinity,
-                                                                grid_resolution,
-                                                                cut_method=cut_method, 
-                                                                floor=floor)
-            left_cut = this_cut.copy()
-            left_cut[left_cut] *= new_cut
-            right_cut = this_cut.copy()
-            right_cut[right_cut] *= ~new_cut
-            assert len(this_cut) == len(left_cut) == len(right_cut), "Indexing Error in cutting!"
+            if this_cut.sum() > 2: #can't cut a singleton
+                current_affinity = self.affinity_matrix_[this_cut,:][:,this_cut]
+                embedding = self._embed(current_affinity, shift_invert = shift_invert)
+                second_eigenvector = embedding[1]
+                new_cut, score_of_cut = self._make_hierarchical_cut(second_eigenvector, 
+                                                                    current_affinity,
+                                                                    grid_resolution,
+                                                                    cut_method=cut_method, 
+                                                                    floor=floor)
+                left_cut = this_cut.copy()
+                left_cut[left_cut] *= new_cut
+                right_cut = this_cut.copy()
+                right_cut[right_cut] *= ~new_cut
+                assert len(this_cut) == len(left_cut) == len(right_cut), "Indexing Error in cutting!"
             if (((left_cut*floor_weights).sum() > floor) 
              & ((right_cut*floor_weights).sum() > floor)):
                 if ((tuple(left_cut) not in accepted_cuts)
@@ -525,7 +527,7 @@ class SPENC(clust.SpectralClustering):
             assert callable(distribution), 'distribution is not callable!'
         for _ in range(n_samples):
             randomweights = distribution()
-            fitted = self.fit(randomweights, W, **fit_kw)
+            fitted = clone(self).fit(randomweights, W, **fit_kw)
             yield fitted.labels_
 
     def sample(self, W, n_samples=1, 
@@ -573,7 +575,7 @@ class AgglomerativeClustering(clust.AgglomerativeClustering):
             assert callable(distribution), 'distribution is not callable!'
         for _ in range(n_samples):
             randomweights = distribution()
-            fitted = self.fit(randomweights)
+            fitted = clone(self).fit(randomweights)
             yield fitted.labels_
 
     def sample(self, n_samples=1, 
