@@ -4,6 +4,10 @@ from warnings import warn as Warn
 import numpy as np
 
 def check_weights(W, X=None, transform = None):
+    """
+    Check that the provided weights matrix and the X matrix are conformal.
+    Further, check that the spatial weights are fully connected. 
+    """
     if X is not None:
         assert W.shape[0] == X.shape[0], "W does not have the same number of samples as X"
     graph = sp.csc_matrix(W)
@@ -30,3 +34,18 @@ def lattice(x,y):
             #print([ll,lr,ur,ul])
             pgons.append(Polygon([ll,lr,ur,ul]))
     return gpd.GeoDataFrame({'geometry':pgons})
+
+def p_connected(replications):
+    """
+    Compute the probability that any two observations are clustered
+    together through a set of labellings.
+
+    Uses outer product broadcasting in numpy, so only iterates over n_iterations,
+    rather than n_iterations X n_iterations.
+    """
+    n_replications, n_observations = replications.shape
+    # dumbest way to do this
+    out = np.zeros((n_observations, n_observations))
+    for replication in replications:
+        out += replication[:,None] == replication[None,:]
+    return out/len(replications)
