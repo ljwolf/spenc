@@ -18,7 +18,8 @@ before_install:
 
 install:
   - conda install --yes pip
-  - pip install -r requirements_dev.txt
+  - conda install --yes scikit-learn scipy nose 
+  - pip install geopandas pysal
 
 script:
   - python setup.py sdist >/dev/null
