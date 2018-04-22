@@ -31,6 +31,7 @@ class SPENCTest(TestCase):
         for label in range(t1.max()):
             mask = t1 == label
             subgraph = self.natR.sparse[mask,:][:,mask]
+            subgraph.eliminate_zeros()
             n_components, labels = csg.connected_components(subgraph)
             self.assertEqual(n_components, 1,
                              'Disconnected component ({}) in NAT clusters!'.format(label))
@@ -44,6 +45,7 @@ class SPENCTest(TestCase):
             for label in range(random.max()):
                 mask = random == label
                 subgraph = self.natR.sparse[mask,:][:,mask]
+                subgraph.eliminate_zeros()
                 n_components, labels = csg.connected_components(subgraph)
                 self.assertEqual(n_components, 1,
                                  'Disconnected component ({}) in NAT '
@@ -55,6 +57,7 @@ class SPENCTest(TestCase):
         for label in range(randoms.max()):
             mask = randoms == label
             subgraph = self.natR.sparse[mask,:][:,mask]
+            subgraph.eliminate_zeros()
             n_components, labels = csg.connected_components(subgraph)
             self.assertEqual(n_components, 1,
                              'Disconnected component ({}) in NAT '
@@ -67,6 +70,7 @@ class SPENCTest(TestCase):
         for label in range(k30.labels_.max()):
             mask = k30.labels_ == label
             subgraph = self.natR.sparse[mask,:][:,mask]
+            subgraph.eliminate_zeros()
             n_components, labels = csg.connected_components(subgraph)
             self.assertEqual(n_components, 1,
                              'Disconnected component ({}) in NAT clusters!'.format(label))
@@ -77,6 +81,7 @@ class SPENCTest(TestCase):
         for label in range(kinf.labels_.max()):
             mask = kinf.labels_ == label
             subgraph = self.natR.sparse[mask,:][:,mask]
+            subgraph.eliminate_zeros()
             n_components, labels = csg.connected_components(subgraph)
             self.assertEqual(n_components, 1,
                              'Disconnected component ({}) in NAT clusters!'.format(label))
