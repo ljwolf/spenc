@@ -1,6 +1,7 @@
 import scipy.sparse.csgraph as csg
 import scipy.sparse as sp
 from warnings import warn as Warn
+import numpy as np
 
 def check_weights(W, X=None, transform = None):
     if X is not None:
@@ -12,3 +13,20 @@ def check_weights(W, X=None, transform = None):
     	Warn('Spatial affinity matrix is disconnected, and has {} subcomponents.'
     		 'This will certainly affect the solution output.')
     return W
+
+def lattice(x,y):
+    """
+    Construct a lattice of unit squares of dimension (x,y)
+    """
+    from shapely.geometry import Polygon
+    import geopandas as gpd
+    x = np.arange(x)*1.0
+    y = np.arange(y)*1.0
+    pgons = []
+    for i in x:
+        for j in y:
+            ll,lr,ur,ul = (i,j), (i+1,j),\
+                          (i+1,j+1), (i,j+1)
+            #print([ll,lr,ur,ul])
+            pgons.append(Polygon([ll,lr,ur,ul]))
+    return gpd.GeoDataFrame({'geometry':pgons})
