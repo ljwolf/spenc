@@ -76,7 +76,7 @@ class SPENCTest(TestCase):
                              'Disconnected component ({}) in NAT clusters!'.format(label))
         np.testing.assert_array_equal(k30.labels_, self.nat_30k_discovered)
         np.random.seed(1901)
-        kinf = spenc.SPENC(n_clusters=np.inf, gamma=.001, assign_labels='hierarchical')\
+        kinf = spenc.SPENC(n_clusters=np.inf, gamma=.001)\
                     .fit(self.natX, self.natR.sparse, floor=20)
         for label in range(kinf.labels_.max()):
             mask = kinf.labels_ == label
