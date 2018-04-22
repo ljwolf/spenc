@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='spenc',
-      version='0.1',
+      version='0.2',
       description='Spatially-Encouraged Spectral Clustering, a method of discovering clusters/deriving labels for spatially-referenced data with attribute/labels attached',
       url='https://github.com/ljwolf/spenc',
       author='Levi John Wolf',
