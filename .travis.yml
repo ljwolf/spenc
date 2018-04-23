@@ -23,6 +23,7 @@ install:
 
 script:
   - python setup.py sdist >/dev/null
+  - python -c "import numpy; print(numpy.show_config())"
   - nosetests --verbose spenc;
 notifications:
     email:
