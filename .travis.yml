@@ -19,12 +19,12 @@ before_install:
 install:
   - conda install --yes pip
   - conda install --yes scikit-learn scipy nose 
-  - pip install geopandas pysal
+  - pip install geopandas pysal pytest
 
 script:
   - python setup.py sdist >/dev/null
   - python -c "import numpy; print(numpy.show_config())"
-  - nosetests --verbose spenc;
+  - pytest spenc;
 notifications:
     email:
         recipients:

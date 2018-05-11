@@ -36,7 +36,7 @@ class SPENCTest(TestCase):
             n_components, labels = csg.connected_components(subgraph)
             self.assertEqual(n_components, 1,
                              'Disconnected component ({}) in NAT clusters!'.format(label))
-        np.testing.assert_allclose(accuracy_score(t1, self.nat_10k_nodata), .05)
+        np.testing.assert_allclose(accuracy_score(t1, self.nat_10k_nodata), 1, atol=.05)
 
     def test_NAT_randoms(self):
         np.random.seed(1901)
