@@ -496,6 +496,16 @@ class SPENC(clust.SpectralClustering):
         spatial_score = spatial_score(W,labels, X=X,**spatial_kw)
         return delta * attribute_score + (1 - delta)*spatial_score
 
+    def gain(self, labels=None, metric=skm.adjusted_rand_score):
+        """Change in assignment from pure spatial/pure attribute assignments"""
+        if labels is None:
+            if not hasattr(self, 'labels_'):
+                raise Exception("Must provide labels or have fit in order to compute gain.")
+            labels = self.labels_
+        purespace = self.fit(None, self.W)
+        pureatts = self.fit(self.attribute_affinity_, np.ones_like(self.W))
+        return metric(purespace.labels_, labels), metric(pureatts.labels_, labels)
+
     def _sample_gen(self, W, n_samples=1, 
                             affinity='rbf',
                             distribution=None, **fit_kw):
