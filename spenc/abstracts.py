@@ -253,9 +253,9 @@ class SPENC(clust.SpectralClustering):
             if self.affinity == 'nearest_neighbors':
                 connectivity = kneighbors_graph(X, n_neighbors=self.n_neighbors,
                                                 include_self=True, n_jobs=self.n_jobs)
-                self.affinity_matrix_ = .5 * (connectivity + connectivity.T)
+                self.attribute_affinity_ = .5 * (connectivity + connectivity.T)
             elif self.affinity == 'precomputed':
-                self.affinity_matrix_ = X
+                self.attribute_affinity_ = X
             else:
                 params = self.kernel_params
                 if params is None:
@@ -267,8 +267,8 @@ class SPENC(clust.SpectralClustering):
                 self.attribute_affinity_ = pw.pairwise_kernels(X, metric=self.affinity,
                                                                filter_params=True,
                                                                **params)
-                self.spatial_affinity_ = W
-                self.affinity_matrix_ = W.multiply(self.attribute_affinity_)
+            self.spatial_affinity_ = W
+            self.affinity_matrix_ = W.multiply(self.attribute_affinity_)
         else:
             self.affinity_matrix_ = W
         if breakme: ##sklearn/issues/8129
