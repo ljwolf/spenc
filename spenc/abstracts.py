@@ -243,6 +243,9 @@ class SPENC(clust.SpectralClustering):
         """
         if np.isinf(self.n_clusters):
             self.assign_labels='hierarchical'
+        
+        if W is None:
+            W = sparse.csc_matrix(np.ones_like(X.shape[0],X.shape[0]))
 
         if X is not None:
             X = check_array(X, accept_sparse = ['csr','coo', 'csc'],
@@ -255,7 +258,7 @@ class SPENC(clust.SpectralClustering):
                                                 include_self=True, n_jobs=self.n_jobs)
                 self.attribute_affinity_ = .5 * (connectivity + connectivity.T)
             elif self.affinity == 'precomputed':
-                self.attribute_affinity_ = X
+                self.attribute_affinity_ = W.multiply(X)
             else:
                 params = self.kernel_params
                 if params is None:
