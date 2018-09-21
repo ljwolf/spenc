@@ -243,6 +243,9 @@ class SPENC(clust.SpectralClustering):
         """
         if np.isinf(self.n_clusters):
             self.assign_labels='hierarchical'
+        
+        if W is None:
+            W = sparse.csc_matrix(np.ones_like(X.shape[0],X.shape[0]))
 
         if X is not None:
             X = check_array(X, accept_sparse = ['csr','coo', 'csc'],
@@ -253,9 +256,9 @@ class SPENC(clust.SpectralClustering):
             if self.affinity == 'nearest_neighbors':
                 connectivity = kneighbors_graph(X, n_neighbors=self.n_neighbors,
                                                 include_self=True, n_jobs=self.n_jobs)
-                self.affinity_matrix_ = .5 * (connectivity + connectivity.T)
+                self.attribute_affinity_ = .5 * (connectivity + connectivity.T)
             elif self.affinity == 'precomputed':
-                self.affinity_matrix_ = X
+                self.attribute_affinity_ = W.multiply(X)
             else:
                 params = self.kernel_params
                 if params is None:
@@ -267,8 +270,8 @@ class SPENC(clust.SpectralClustering):
                 self.attribute_affinity_ = pw.pairwise_kernels(X, metric=self.affinity,
                                                                filter_params=True,
                                                                **params)
-                self.spatial_affinity_ = W
-                self.affinity_matrix_ = W.multiply(self.attribute_affinity_)
+            self.spatial_affinity_ = W
+            self.affinity_matrix_ = W.multiply(self.attribute_affinity_)
         else:
             self.affinity_matrix_ = W
         if breakme: ##sklearn/issues/8129
@@ -495,6 +498,16 @@ class SPENC(clust.SpectralClustering):
         attribute_score = attribute_score(X,labels, **attribute_kw)
         spatial_score = spatial_score(W,labels, X=X,**spatial_kw)
         return delta * attribute_score + (1 - delta)*spatial_score
+
+    def gain(self, labels=None, metric=skm.adjusted_rand_score):
+        """Change in assignment from pure spatial/pure attribute assignments"""
+        if labels is None:
+            if not hasattr(self, 'labels_'):
+                raise Exception("Must provide labels or have fit in order to compute gain.")
+            labels = self.labels_
+        purespace = self.fit(None, self.W)
+        pureatts = self.fit(self.attribute_affinity_, np.ones_like(self.W))
+        return metric(purespace.labels_, labels), metric(pureatts.labels_, labels)
 
     def _sample_gen(self, W, n_samples=1, 
                             affinity='rbf',
