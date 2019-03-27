@@ -270,26 +270,26 @@ class SPENC(clust.SpectralClustering):
                 attribute_affinity_ = pw.pairwise_kernels(X, metric=self.affinity,
                                                                filter_params=True,
                                                                **params)
-            self.spatial_affinity_ = W
-            self.affinity_matrix_ = W.multiply(attribute_affinity_)
+            spatial_affinity_ = W
+            affinity_matrix_ = W.multiply(attribute_affinity_)
         else:
-            self.affinity_matrix_ = W
+            affinity_matrix_ = W
         if breakme: ##sklearn/issues/8129
-            self.affinity_ = self.affinity
-            self.affinity = 'precomputed'
-            super().fit(self.affinity_matrix_)
+            affinity_old = affinity
+            affinity = 'precomputed'
+            super().fit(affinity_matrix_)
 
-            self.affinity = self.affinity_
-            del self.affinity_
+            self.affinity = affinity_old
             return self
 
         if self.assign_labels == 'hierarchical':
-            self.labels_ = self._spectral_bipartition(grid_resolution=grid_resolution, 
+            self.labels_ = self._spectral_bipartition(affinity_matrix,
+                                                      grid_resolution=grid_resolution,
                                                       shift_invert=shift_invert, floor=floor,
                                                       floor_weights=floor_weights)
             return self
 
-        embedding = self._embed(self.affinity_matrix_, shift_invert=shift_invert)
+        embedding = self._embed(affinity_matrix_, shift_invert=shift_invert)
         self.embedding_ = embedding.T
         random_state = check_random_state(self.random_state)
 
@@ -329,7 +329,8 @@ class SPENC(clust.SpectralClustering):
         embedding = _deterministic_vector_sign_flip(embedding)
         return embedding
 
-    def _spectral_bipartition(self, grid_resolution=100, 
+    def _spectral_bipartition(self, affinity_matrix_,
+                              grid_resolution=100,
                               shift_invert=True, floor=0,
                               floor_weights = None,
                               cut_method='gridsearch'):
@@ -372,18 +373,18 @@ class SPENC(clust.SpectralClustering):
                           "zero" is the best method for large data. 
         """
         if floor_weights is None:
-            floor_weights = np.ones((self.affinity_matrix_.shape[0],))
-        if spar.issparse(self.affinity_matrix_):
-            self.affinity_matrix_ = self.affinity_matrix_.tocsr()
+            floor_weights = np.ones((affinity_matrix_.shape[0],))
+        if spar.issparse(affinity_matrix_):
+            affinity_matrix_ = affinity_matrix_.tocsr()
         threshold = self.n_clusters
         self.n_clusters = 2
         discovered=1
-        this_cut = np.ones((self.affinity_matrix_.shape[0],)).astype(bool)
+        this_cut = np.ones((affinity_matrix_.shape[0],)).astype(bool)
         cuts = []
         accepted_cuts = []
         while discovered < threshold:
             if this_cut.sum() > 2: #can't cut a singleton
-                current_affinity = self.affinity_matrix_[this_cut,:][:,this_cut]
+                current_affinity = affinity_matrix_[this_cut,:][:,this_cut]
                 embedding = self._embed(current_affinity, shift_invert = shift_invert)
                 second_eigenvector = embedding[1]
                 new_cut, score_of_cut = self._make_hierarchical_cut(second_eigenvector, 
