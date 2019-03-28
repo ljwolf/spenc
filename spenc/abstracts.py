@@ -18,7 +18,7 @@ from warnings import warn as Warn
 class SPENC(clust.SpectralClustering):
     def __init__(self, n_clusters=8, eigen_solver=None, random_state=None,
                  n_init=10, gamma=1., affinity='rbf', n_neighbors=10,
-                 eigen_tol=1e-9, assign_labels='discretize', degree=3, coef0=1,
+                 eigen_tol=1e-9, assign_labels='kmeans', degree=3, coef0=1,
                  kernel_params=None, n_jobs=1):
         """
         Apply clustering to a projection of the normalized laplacian, using
