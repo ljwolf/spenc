@@ -177,7 +177,7 @@ class SPENC(clust.SpectralClustering):
         self.kernel_params = kernel_params
         self.n_jobs = n_jobs
 
-    def fit(self, X, W=None, y=None, shift_invert=True, breakme=False, check_W=True,
+    def fit(self, X, W=None, y=None, shift_invert=True, check_W=True,
             grid_resolution = 100, floor=0, floor_weights=None, cut_method='gridsearch'):
         """Creates an affinity matrix for X using the selected affinity,
         applies W to the affinity elementwise, and then applies spectral clustering
@@ -274,13 +274,6 @@ class SPENC(clust.SpectralClustering):
             affinity_matrix_ = W.multiply(attribute_affinity_)
         else:
             affinity_matrix_ = W
-        if breakme: ##sklearn/issues/8129
-            affinity_old = affinity
-            affinity = 'precomputed'
-            super().fit(affinity_matrix_)
-
-            self.affinity = affinity_old
-            return self
 
         if self.assign_labels == 'hierarchical':
             self.labels_ = self._spectral_bipartition(affinity_matrix,
