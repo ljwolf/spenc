@@ -275,21 +275,9 @@ class SPENC(clust.SpectralClustering):
         else:
             affinity_matrix_ = W
 
-        if self.assign_labels == 'hierarchical':
-            self.labels_ = self._spectral_bipartition(affinity_matrix,
-                                                      grid_resolution=grid_resolution,
-                                                      shift_invert=shift_invert, floor=floor,
-                                                      floor_weights=floor_weights)
-            return self
-
-        embedding = self._embed(affinity_matrix_, shift_invert=shift_invert)
-        self.embedding_ = embedding.T
-        random_state = check_random_state(self.random_state)
-
-        if self.assign_labels == 'kmeans':
-            self.labels_ = clust.KMeans(n_clusters=self.n_clusters).fit(self.embedding_).labels_
-        else:
-            self.labels_ = _discretize(self.embedding_, random_state=random_state)
+        affinity_old = self.affinity
+        self.affinity = 'precomputed'
+        super().fit(affinity_matrix)
         return self
 
     def _embed(self, affinity, shift_invert=True):
