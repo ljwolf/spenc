@@ -14,8 +14,8 @@ SEED = 1901
 
 class SPENCTest(TestCase):
     def setUp(self):
-        self.nat = gpd.read_file(ps.examples.get_path('NAT.shp'))
-        self.natR = ps.weights.Rook.from_dataframe(self.nat)
+        self.nat = gpd.read_file(ps.lib.examples.get_path('NAT.shp'))
+        self.natR = ps.lib.weights.Rook.from_dataframe(self.nat)
         self.nat_10k_nodata = np.load(os.path.join(filepath, 'data/nat_10k_nodata.ary'))
         self.nat_30k_randoms = np.load(os.path.join(filepath, 'data/nat_30k_randoms.ary'))
         self.nat_30k_discovered = np.load(os.path.join(filepath, 'data/nat_30k_discovered.ary'))
