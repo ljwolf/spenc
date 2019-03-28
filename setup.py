@@ -17,4 +17,4 @@ setup(name='spenc',
       license='3-Clause BSD',
       python_requires='>=3.5',
       packages=['spenc'],
-      install_requires=['scikit-learn', 'scipy'])
+      install_requires=['scikit-learn>=0.20.0', 'scipy'])

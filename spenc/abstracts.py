@@ -277,7 +277,7 @@ class SPENC(clust.SpectralClustering):
 
         affinity_old = self.affinity
         self.affinity = 'precomputed'
-        super().fit(affinity_matrix)
+        super().fit(affinity_matrix_)
         return self
 
     def _embed(self, affinity, shift_invert=True):
